@@ -46,7 +46,7 @@ export function GameLeaderboard() {
         </div>
 
         {/* Round Selector */}
-        <div className="flex bg-[#141A29]/80 p-1.5 rounded-xl border border-[#1F2937] backdrop-blur-md">
+        <div className="flex bg-[#111111]/80 p-1.5 rounded-xl border border-[#333333] backdrop-blur-md">
           {rounds.map(round => (
             <button
               key={round.id}

@@ -28,7 +28,7 @@ export function Overview() {
         </div>
 
         {/* Round Selector */}
-        <div className="flex bg-[#141A29]/80 p-1.5 rounded-xl border border-[#1F2937] backdrop-blur-md">
+        <div className="flex bg-[#111111]/80 p-1.5 rounded-xl border border-[#333333] backdrop-blur-md">
           {rounds.map(round => (
             <button
               key={round.id}
@@ -36,14 +36,14 @@ export function Overview() {
               className={cn(
                 "relative px-6 py-2.5 text-sm font-bold uppercase tracking-widest rounded-lg transition-all duration-300",
                 selectedRound === round.id 
-                  ? "text-[#00F0FF] text-shadow-[0_0_10px_rgba(0,240,255,0.8)]" 
-                  : "text-[#9CA3AF] hover:text-white"
+                  ? "text-[#76B900] drop-shadow-[0_0_8px_rgba(118,185,0,0.8)]" 
+                  : "text-[#A1A1AA] hover:text-white"
               )}
             >
               {selectedRound === round.id && (
                 <motion.div
                   layoutId="roundTab"
-                  className="absolute inset-0 bg-[#00F0FF]/15 border border-[#00F0FF]/50 rounded-lg shadow-[0_0_15px_rgba(0,240,255,0.3)]"
+                  className="absolute inset-0 bg-[#76B900]/15 border border-[#76B900]/50 rounded-lg shadow-[0_0_15px_rgba(118,185,0,0.3)]"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}

@@ -19,26 +19,26 @@ export function Layout() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0B0F1A] text-white selection:bg-[#00F0FF]/30 overflow-x-hidden">
+    <div className="min-h-screen bg-[#000000] text-white selection:bg-[#76B900]/30 overflow-x-hidden">
       {/* Background Gradients */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#00F0FF] opacity-10 blur-[150px] rounded-full mix-blend-screen" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#8A2BE2] opacity-10 blur-[150px] rounded-full mix-blend-screen" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5" />
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#76B900] opacity-5 blur-[150px] rounded-full mix-blend-screen" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#76B900] opacity-5 blur-[150px] rounded-full mix-blend-screen" />
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
       </div>
 
-      <header className="relative z-10 border-b border-[#1F2937]/50 bg-[#0B0F1A]/80 backdrop-blur-xl sticky top-0">
+      <header className="relative z-10 border-b border-[#333333]/50 bg-[#0A0A0A]/80 backdrop-blur-xl sticky top-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#00F0FF] to-[#8A2BE2] p-[1px]">
-                <div className="absolute inset-0 blur-md bg-[#00F0FF]/50" />
-                <div className="relative flex h-full w-full items-center justify-center rounded-xl bg-[#0B0F1A]">
-                  <Trophy size={20} className="text-[#00F0FF]" />
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#76B900] to-[#558a00] p-[1px]">
+                <div className="absolute inset-0 blur-md bg-[#76B900]/30" />
+                <div className="relative flex h-full w-full items-center justify-center rounded-xl bg-[#000000]">
+                  <Trophy size={20} className="text-[#76B900]" />
                 </div>
               </div>
-              <h1 className="text-2xl font-bold font-display tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] to-[#FF00FF]">
-                CYBER LEADERBOARD
+              <h1 className="text-2xl font-bold font-display tracking-widest text-[#FFFFFF] drop-shadow-[0_0_8px_rgba(118,185,0,0.5)]">
+                NVI LEADERBOARD
               </h1>
             </div>
 
@@ -50,13 +50,13 @@ export function Layout() {
                     key={link.to}
                     to={link.to}
                     className={`relative px-4 py-2 text-sm font-bold uppercase tracking-wider rounded-lg transition-colors duration-200 ${
-                      isActive ? 'text-[#00F0FF]' : 'text-[#9CA3AF] hover:text-white hover:bg-[#1F2937]/50'
+                      isActive ? 'text-[#76B900]' : 'text-[#A1A1AA] hover:text-white hover:bg-[#222222]/50'
                     }`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId="activeTab"
-                        className="absolute inset-0 bg-[#00F0FF]/10 rounded-lg shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+                        className="absolute inset-0 border-b-2 border-[#76B900] bg-gradient-to-t from-[#76B900]/10 to-transparent rounded-lg"
                         initial={false}
                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                       />
@@ -72,7 +72,7 @@ export function Layout() {
           </div>
         </div>
         {/* Bottom Neon Line */}
-        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#00F0FF] to-transparent opacity-50 shadow-[0_0_10px_#00F0FF]" />
+        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#76B900] to-transparent opacity-60 shadow-[0_0_12px_#76B900]" />
       </header>
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

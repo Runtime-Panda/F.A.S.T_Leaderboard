@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence, useSpring, useMotionValue, useTransform } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
 import { RankBadge } from './RankBadge';
 import { cn } from './NeonButton';
@@ -23,10 +23,18 @@ export function LeaderboardCard({ rank, team, score, breakdown, maxScore = 4000 
     1: 'from-[#FFD700]/10 to-transparent border-[#FFD700]/50 shadow-[0_0_20px_rgba(255,215,0,0.15)]',
     2: 'from-[#C0C0C0]/10 to-transparent border-[#C0C0C0]/50 shadow-[0_0_15px_rgba(192,192,192,0.1)]',
     3: 'from-[#CD7F32]/10 to-transparent border-[#CD7F32]/50 shadow-[0_0_15px_rgba(205,127,50,0.1)]',
-    default: 'bg-[#141A29]/80 border-[#1F2937] hover:border-[#00F0FF]/30 hover:shadow-[0_0_15px_rgba(0,240,255,0.1)]'
+    default: 'bg-[#111111]/80 border-[#333333] hover:border-[#76B900]/30 hover:shadow-[0_0_15px_rgba(118,185,0,0.15)]'
   };
 
   const currentColors = cardColors[rank as keyof typeof cardColors] || cardColors.default;
+
+  const scoreValue = useMotionValue(0);
+  const animatedScore = useSpring(scoreValue, { stiffness: 50, damping: 15 });
+  const displayScore = useTransform(animatedScore, (latest) => Math.round(latest).toLocaleString());
+
+  useEffect(() => {
+    scoreValue.set(score);
+  }, [score, scoreValue]);
 
   return (
     <div
@@ -43,7 +51,7 @@ export function LeaderboardCard({ rank, team, score, breakdown, maxScore = 4000 
           <RankBadge rank={rank} />
         </div>
         
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#0B0F1A] border border-[#2D3748] text-[#00F0FF]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#000000] border border-[#333333] text-[#76B900]">
           <TeamIcon size={24} />
         </div>
         
@@ -51,10 +59,10 @@ export function LeaderboardCard({ rank, team, score, breakdown, maxScore = 4000 
           <h3 className={cn("text-xl truncate font-bold uppercase tracking-wider", rank === 1 ? "text-[#FFD700]" : rank === 2 ? "text-[#C0C0C0]" : rank === 3 ? "text-[#CD7F32]" : "text-white")}>
             {team.name}
           </h3>
-          <div className="w-full max-w-[200px] h-1.5 mt-2 bg-[#0B0F1A] rounded-full overflow-hidden border border-[#2D3748]">
+          <div className="w-full max-w-[200px] h-1.5 mt-2 bg-[#000000] rounded-full overflow-hidden border border-[#333333]">
             <motion.div 
               className={cn("h-full rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]", 
-                rank === 1 ? "bg-[#FFD700]" : rank === 2 ? "bg-[#C0C0C0]" : rank === 3 ? "bg-[#CD7F32]" : "bg-[#00F0FF]"
+                rank === 1 ? "bg-[#FFD700]" : rank === 2 ? "bg-[#C0C0C0]" : rank === 3 ? "bg-[#CD7F32]" : "bg-[#76B900]"
               )}
               initial={{ width: 0 }}
               animate={{ width: `${Math.min((score / maxScore) * 100, 100)}%` }}
@@ -64,11 +72,9 @@ export function LeaderboardCard({ rank, team, score, breakdown, maxScore = 4000 
         </div>
         
         <div className="text-right px-4">
-          <div className="text-sm text-[#9CA3AF] uppercase font-bold tracking-widest mb-1">Score</div>
+          <div className="text-sm text-[#A1A1AA] uppercase font-bold tracking-widest mb-1">Score</div>
           <div className="text-3xl font-display font-bold text-white tabular-nums tracking-wider leading-none">
-            <motion.span>
-              {score.toLocaleString()}
-            </motion.span>
+            <motion.span>{displayScore}</motion.span>
           </div>
         </div>
 
@@ -88,7 +94,7 @@ export function LeaderboardCard({ rank, team, score, breakdown, maxScore = 4000 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t border-[#1F2937] bg-[#0B0F1A]/50"
+            className="border-t border-[#333333] bg-[#000000]/50"
           >
             <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {breakdown.map((item, i) => {
@@ -99,7 +105,7 @@ export function LeaderboardCard({ rank, team, score, breakdown, maxScore = 4000 
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.1 }}
-                    className="flex flex-col rounded-lg bg-[#141A29] p-3 border border-[#2D3748]"
+                    className="flex flex-col rounded-lg bg-[#111111] p-3 border border-[#333333]"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <GameIcon size={16} color={item.game.color} />
@@ -108,7 +114,7 @@ export function LeaderboardCard({ rank, team, score, breakdown, maxScore = 4000 
                     <div className="text-xl font-display font-bold tabular-nums" style={{ color: item.game.color }}>
                       {item.score.toLocaleString()}
                     </div>
-                    <div className="w-full h-1 mt-2 bg-[#0B0F1A] rounded-full overflow-hidden">
+                    <div className="w-full h-1 mt-2 bg-[#000000] rounded-full overflow-hidden">
                       <motion.div
                         className="h-full rounded-full"
                         style={{ backgroundColor: item.game.color, boxShadow: `0 0 5px ${item.game.color}` }}
