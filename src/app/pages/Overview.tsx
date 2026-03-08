@@ -3,13 +3,24 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useTournament } from '../context/TournamentContext';
 import { LeaderboardCard } from '../components/LeaderboardCard';
 import { cn } from '../components/NeonButton';
+import { ExportButtons } from '../components/ExportButtons';
 
 export function Overview() {
   const { rounds, getOverallScores } = useTournament();
   const [selectedRound, setSelectedRound] = useState(rounds[0].id);
 
   const overallScores = getOverallScores(selectedRound);
-  const maxScore = Math.max(...overallScores.map(s => s.total), 4000); // 4 games * 1000
+  const maxScore = Math.max(...overallScores.map(s => s.total), 4000);
+
+  // Shape data for export utilities
+  const exportEntries = overallScores.map((item, index) => ({
+    rank: index + 1,
+    team: item.team,
+    total: item.total,
+    breakdown: item.breakdown,
+  }));
+
+  const selectedRoundName = rounds.find(r => r.id === selectedRound)?.name ?? 'Round';
 
   return (
     <motion.div
@@ -27,29 +38,38 @@ export function Overview() {
           <p className="text-[#9CA3AF] mt-2 font-mono text-sm">CUMULATIVE SCORE ACROSS ALL GAMES</p>
         </div>
 
-        {/* Round Selector */}
-        <div className="flex bg-[#111111]/80 p-1.5 rounded-xl border border-[#333333] backdrop-blur-md">
-          {rounds.map(round => (
-            <button
-              key={round.id}
-              onClick={() => setSelectedRound(round.id)}
-              className={cn(
-                "relative px-6 py-2.5 text-sm font-bold uppercase tracking-widest rounded-lg transition-all duration-300",
-                selectedRound === round.id 
-                  ? "text-[#76B900] drop-shadow-[0_0_8px_rgba(118,185,0,0.8)]" 
-                  : "text-[#A1A1AA] hover:text-white"
-              )}
-            >
-              {selectedRound === round.id && (
-                <motion.div
-                  layoutId="roundTab"
-                  className="absolute inset-0 bg-[#76B900]/15 border border-[#76B900]/50 rounded-lg shadow-[0_0_15px_rgba(118,185,0,0.3)]"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10">{round.name}</span>
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {/* Export Buttons */}
+          <ExportButtons
+            entries={exportEntries}
+            roundName={selectedRoundName}
+            eventName="HackClub Hackathon"
+          />
+
+          {/* Round Selector */}
+          <div className="flex bg-[#111111]/80 p-1.5 rounded-xl border border-[#333333] backdrop-blur-md">
+            {rounds.map(round => (
+              <button
+                key={round.id}
+                onClick={() => setSelectedRound(round.id)}
+                className={cn(
+                  "relative px-6 py-2.5 text-sm font-bold uppercase tracking-widest rounded-lg transition-all duration-300",
+                  selectedRound === round.id
+                    ? "text-[#76B900] drop-shadow-[0_0_8px_rgba(118,185,0,0.8)]"
+                    : "text-[#A1A1AA] hover:text-white"
+                )}
+              >
+                {selectedRound === round.id && (
+                  <motion.div
+                    layoutId="roundTab"
+                    className="absolute inset-0 bg-[#76B900]/15 border border-[#76B900]/50 rounded-lg shadow-[0_0_15px_rgba(118,185,0,0.3)]"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{round.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
