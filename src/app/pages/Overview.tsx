@@ -3,13 +3,30 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useTournament } from '../context/TournamentContext';
 import { LeaderboardCard } from '../components/LeaderboardCard';
 import { cn } from '../components/NeonButton';
+import { ExportDropdown } from '../components/ExportDropdown';
+import { exportOverviewPDF, exportOverviewXML, OverviewAllRoundsEntry } from '../components/exportLeaderboard';
 
 export function Overview() {
   const { rounds, getOverallScores } = useTournament();
   const [selectedRound, setSelectedRound] = useState(rounds[0].id);
 
   const overallScores = getOverallScores(selectedRound);
-  const maxScore = Math.max(...overallScores.map(s => s.total), 4000); // 4 games * 1000
+  const maxScore = Math.max(...overallScores.map(s => s.total), 4000);
+
+  // Build all-rounds entries for export
+  const allRoundsEntries: OverviewAllRoundsEntry[] = (() => {
+    // Get all teams from first round as base
+    const baseScores = getOverallScores(rounds[0].id);
+    return baseScores.map(({ team }) => {
+      const roundTotals = rounds.map(r => {
+        const roundScores = getOverallScores(r.id);
+        const found = roundScores.find(s => s.team.id === team.id);
+        return { roundName: r.name, total: found?.total ?? 0 };
+      });
+      const grandTotal = roundTotals.reduce((sum, r) => sum + r.total, 0);
+      return { team, roundTotals, grandTotal };
+    });
+  })();
 
   return (
     <motion.div
