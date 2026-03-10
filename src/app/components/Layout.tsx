@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Gamepad2, Settings, Orbit, Menu, X } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
+import { BackgroundAudio } from './BackgroundAudio';
 
 const Particles = () => {
   return (
@@ -115,6 +116,9 @@ export function Layout() {
               </h1>
             </div>
 
+            <div className="flex items-center gap-2">
+              <BackgroundAudio />
+            </div>
           </div>
         </div>
 
