@@ -37,10 +37,13 @@ type PlanetNodeProps = {
 const hexToColor = (value: string) => new THREE.Color(value);
 const focusOffset = new THREE.Vector3(8, 4.5, 8);
 const _tmpVec = new THREE.Vector3();
+const _tmpOrbitalVec = new THREE.Vector3();
+const _tmpOrigin = new THREE.Vector3(0, 0, 0);
+const chromaticOffset = new THREE.Vector2(0.001, 0.001);
 
-const getOrbitalPosition = (team: GalaxyTeam, elapsedTime: number) => {
+const setOrbitalPosition = (team: GalaxyTeam, elapsedTime: number, target: THREE.Vector3) => {
   if (team.rank === 1 || team.orbitRadius <= 0.0001) {
-    return new THREE.Vector3(0, 0, 0);
+    return target.set(0, 0, 0);
   }
   const eccentricity = team.orbitEccentricity;
   const theta = team.orbitPhase + elapsedTime * team.orbitSpeed;
@@ -48,12 +51,12 @@ const getOrbitalPosition = (team: GalaxyTeam, elapsedTime: number) => {
   const x = Math.cos(theta) * radiusOffset;
   const z = Math.sin(theta) * team.orbitRadius;
   const y = Math.sin(theta * 0.7 + team.orbitPhase) * 2.8 * team.orbitInclination;
-  return new THREE.Vector3(x, y, z);
+  return target.set(x, y, z);
 };
 
 // --- ENHANCED: Colorful Space Dust ---
 const StarfieldDust = ({ qualityMode }: { qualityMode: QualityMode }) => {
-  const count = qualityMode === 'cinematic' ? 4000 : 1500;
+  const count = qualityMode === 'cinematic' ? 2500 : 900;
   const matRef = useRef<THREE.PointsMaterial>(null);
 
   const { positions, colors } = useMemo(() => {
@@ -121,7 +124,7 @@ const NebulaShell = ({ qualityMode }: { qualityMode: QualityMode }) => {
 
   return (
     <mesh>
-      <sphereGeometry args={[450, 64, 64]} />
+      <sphereGeometry args={[450, qualityMode === 'cinematic' ? 48 : 24, qualityMode === 'cinematic' ? 48 : 24]} />
       <shaderMaterial
         ref={shaderRef}
         side={THREE.BackSide}
@@ -545,7 +548,7 @@ const PlanetNode = ({
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
     const t = clock.getElapsedTime();
-    const orbitalPosition = getOrbitalPosition(team, t);
+    const orbitalPosition = setOrbitalPosition(team, t, _tmpOrbitalVec);
     groupRef.current.position.lerp(orbitalPosition, 0.07);
     groupRef.current.rotation.y += 0.0012 + dna.rotationSpeedBase * 0.003;
     groupRef.current.rotation.z = dna.axialTilt;
@@ -577,7 +580,7 @@ const PlanetNode = ({
     >
       <mesh castShadow receiveShadow>
         {/* ⭐ Increased polygons for perfectly round cinematic spheres */}
-        <sphereGeometry args={[1, qualityMode === 'cinematic' ? 128 : 34, qualityMode === 'cinematic' ? 128 : 34]} />
+        <sphereGeometry args={[1, qualityMode === 'cinematic' ? 96 : 28, qualityMode === 'cinematic' ? 96 : 28]} />
         <meshStandardMaterial
           color={baseColor}
           map={surfaceTexture}
@@ -598,7 +601,7 @@ const PlanetNode = ({
       </mesh>
 
       <mesh ref={cloudRef} scale={1.03 + dna.cloudStrength * 0.12}>
-        <sphereGeometry args={[1, 28, 28]} />
+        <sphereGeometry args={[1, qualityMode === 'cinematic' ? 28 : 16, qualityMode === 'cinematic' ? 28 : 16]} />
         <meshStandardMaterial
           color={dna.palette.cloud}
           transparent
@@ -610,7 +613,7 @@ const PlanetNode = ({
       </mesh>
 
       <mesh scale={atmosphereScale}>
-        <sphereGeometry args={[1, 28, 28]} />
+        <sphereGeometry args={[1, qualityMode === 'cinematic' ? 28 : 16, qualityMode === 'cinematic' ? 28 : 16]} />
         <meshBasicMaterial
           color={dna.palette.atmosphere}
           transparent
@@ -688,7 +691,7 @@ const Moon = ({
   });
   return (
     <mesh ref={moonRef}>
-      <sphereGeometry args={[moon.radius, 16, 16]} />
+      <sphereGeometry args={[moon.radius, 12, 12]} />
       <meshStandardMaterial color="#a4a8b5" roughness={0.9} metalness={0.02} />
     </mesh>
   );
@@ -712,6 +715,10 @@ const CameraRig = ({
   const controlsRef = useRef<any>(null);
   const targetRef = useRef(new THREE.Vector3(0, 0, 0));
   const desiredCameraPosRef = useRef(new THREE.Vector3(0, 18, 52));
+  const selectedCameraPosRef = useRef(new THREE.Vector3(0, 18, 52));
+  const idleCameraTargetRef = useRef(new THREE.Vector3(0, 0, 0));
+  const idleCameraPosRef = useRef(new THREE.Vector3(0, 18, 52));
+  const leaderCameraPosRef = useRef(new THREE.Vector3(0, 14, 38));
   const { camera } = useThree();
   const leaderAckRef = useRef(false);
 
@@ -750,22 +757,22 @@ const CameraRig = ({
     if (selectedTeamId) {
       const selected = teams.find((team) => team.id === selectedTeamId);
       if (selected) {
-        const dynamicFocus = getOrbitalPosition(selected, t);
+        const dynamicFocus = setOrbitalPosition(selected, t, _tmpVec);
         targetRef.current.lerp(dynamicFocus, 0.12);
         
         const sizePullback = selected.normalizedInfluence * 12;
         const rankPullback = selected.rank === 1 ? 22 : 4;
         const totalPullback = rankPullback + sizePullback;
 
-        _tmpVec.copy(dynamicFocus).add(focusOffset);
-        _tmpVec.y += totalPullback * 0.4;
-        _tmpVec.z += totalPullback;
+        selectedCameraPosRef.current.copy(dynamicFocus).add(focusOffset);
+        selectedCameraPosRef.current.y += totalPullback * 0.4;
+        selectedCameraPosRef.current.z += totalPullback;
         
-        desiredCameraPosRef.current.lerp(_tmpVec, 0.11);
+        desiredCameraPosRef.current.lerp(selectedCameraPosRef.current, 0.11);
       }
     } else if (leaderAckRef.current) {
-      targetRef.current.lerp(new THREE.Vector3(0, 0, 0), 0.06);
-      desiredCameraPosRef.current.lerp(new THREE.Vector3(0, 14, 38), 0.04);
+      targetRef.current.lerp(_tmpOrigin, 0.06);
+      desiredCameraPosRef.current.lerp(leaderCameraPosRef.current, 0.04);
       if (targetRef.current.lengthSq() < 0.5) {
         leaderAckRef.current = false;
       }
@@ -773,8 +780,10 @@ const CameraRig = ({
       const driftX = Math.sin(t * 0.08) * 5;
       const driftY = 16 + Math.sin(t * 0.11) * 1.4;
       const driftZ = 46 + Math.cos(t * 0.07) * 6;
-      desiredCameraPosRef.current.lerp(new THREE.Vector3(driftX, driftY, driftZ), 0.03);
-      targetRef.current.lerp(new THREE.Vector3(0, Math.sin(t * 0.12) * 0.7, 0), 0.04);
+      idleCameraPosRef.current.set(driftX, driftY, driftZ);
+      idleCameraTargetRef.current.set(0, Math.sin(t * 0.12) * 0.7, 0);
+      desiredCameraPosRef.current.lerp(idleCameraPosRef.current, 0.03);
+      targetRef.current.lerp(idleCameraTargetRef.current, 0.04);
     }
 
     camera.position.lerp(desiredCameraPosRef.current, 0.055);
@@ -847,19 +856,19 @@ const GalaxyScene = ({
         intensity={60 + leader.normalizedInfluence * 15} 
         color="#ffd6a6" 
         decay={1.8} 
-        castShadow 
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        castShadow={qualityMode === 'cinematic'}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
       />
-      <directionalLight position={[20, 30, 20]} intensity={1.8} color="#e6efff" castShadow />
+      <directionalLight position={[20, 30, 20]} intensity={1.8} color="#e6efff" castShadow={qualityMode === 'cinematic'} />
       <directionalLight position={[-20, -10, -20]} intensity={0.5} color="#c232ff" />
 
       <NebulaShell qualityMode={qualityMode} />
-      <Stars radius={300} depth={150} count={qualityMode === 'cinematic' ? 5000 : 2000} factor={6} saturation={0.8} fade speed={0.6} />
+      <Stars radius={300} depth={150} count={qualityMode === 'cinematic' ? 3200 : 1200} factor={6} saturation={0.8} fade speed={0.6} />
       <StarfieldDust qualityMode={qualityMode} />
       
-      <LiveComets count={qualityMode === 'cinematic' ? 5 : 2} />
-      {qualityMode === 'cinematic' && <AsteroidBelt count={350} />}
+      <LiveComets count={qualityMode === 'cinematic' ? 3 : 1} />
+      {qualityMode === 'cinematic' && <AsteroidBelt count={220} />}
 
       <CentralStar leader={leader} dna={dnaByTeam[leader.id]} leaderTransitionValue={leaderTransitionValue} />
 
@@ -883,12 +892,14 @@ const GalaxyScene = ({
         {qualityMode === 'cinematic' && (
           <SSAO radius={0.4} intensity={50} luminanceInfluence={0.4} color="black" />
         )}
-        <DepthOfField 
-          focusDistance={0.015} 
-          focalLength={0.06} 
-          bokehScale={qualityMode === 'cinematic' ? 3.5 : 2} 
-          target={focusTarget}
-        />
+        {qualityMode === 'cinematic' && (
+          <DepthOfField
+            focusDistance={0.015}
+            focalLength={0.06}
+            bokehScale={3.5}
+            target={focusTarget}
+          />
+        )}
         <Bloom
           intensity={qualityMode === 'cinematic' ? 2.0 : 1.2}
           luminanceThreshold={0.12}
@@ -896,8 +907,8 @@ const GalaxyScene = ({
           mipmapBlur
         />
         {/* @ts-ignore */}
-        <ChromaticAberration offset={new THREE.Vector2(0.001, 0.001)} />
-        <Noise opacity={0.025} />
+        {qualityMode === 'cinematic' && <ChromaticAberration offset={chromaticOffset} />}
+        {qualityMode === 'cinematic' && <Noise opacity={0.025} />}
         <Vignette eskil={false} offset={0.1} darkness={0.85} />
       </EffectComposer>
     </>
@@ -905,15 +916,17 @@ const GalaxyScene = ({
 };
 
 export function GalaxyCanvas(props: GalaxyCanvasProps) {
+  const dpr = props.qualityMode === 'cinematic' ? [1, 2] : [1, 1.4];
+
   return (
     <Canvas 
-      shadows="soft" // ⭐ ADDED: Soft shadows
-      dpr={Math.max(window.devicePixelRatio, 2)} // ⭐ ADDED: Forced native resolution
+      shadows={props.qualityMode === 'cinematic' ? 'soft' : false}
+      dpr={dpr}
       gl={{ 
-        antialias: true, 
+        antialias: props.qualityMode === 'cinematic',
         powerPreference: 'high-performance',
-        toneMapping: THREE.ACESFilmicToneMapping, // ⭐ ADDED: Hollywood color grading
-        toneMappingExposure: 1.2,
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: props.qualityMode === 'cinematic' ? 1.2 : 1.05,
         useLegacyLights: false
       }}
     >
